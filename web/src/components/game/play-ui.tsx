@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
+import { agentById, art, type Agent } from "@/lib/agents";
 import type { Friend } from "./world";
 
 /* ---------------- Context: grown-up mode + protocol log ---------------- */
@@ -55,16 +56,22 @@ export function Portrait({
 
 /* ---------------- Relay, the guide ---------------- */
 
-const RELAY = { img: "/art/relay-sm.webp", face: "56% 7%" };
-const VEX = { img: "/art/vex-sm.webp", face: "53% 6%" };
-
-export function Guide({ mood = "happy", size = 76 }: { mood?: "happy" | "wow" | "sly"; size?: number }) {
-  const who = mood === "sly" ? VEX : RELAY;
+export function Guide({
+  mood = "happy",
+  size = 76,
+  who,
+}: {
+  mood?: "happy" | "wow" | "sly";
+  size?: number;
+  /** Which agent is talking. Defaults to Relay, or Vex when sly. */
+  who?: Agent["id"];
+}) {
+  const a = agentById(who ?? (mood === "sly" ? "vex" : "relay"));
   return (
     <span className="bob relative block shrink-0">
-      <Portrait img={who.img} face={who.face} size={size} ring={mood === "sly" ? "#ff7a45" : "#f4b728"} />
-      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap bg-gold px-1.5 font-display text-[0.6rem] tracking-wider text-night">
-        {mood === "sly" ? "VEX" : "RELAY"}
+      <Portrait img={art(a.id, "sm")} face={a.face} size={size} ring={a.id === "vex" ? "#ff7a45" : "#f4b728"} />
+      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap bg-gold px-1.5 font-display text-[0.6rem] uppercase tracking-wider text-night">
+        {a.name}
       </span>
     </span>
   );
@@ -75,14 +82,16 @@ export function Narrator({
   children,
   tech,
   mood,
+  who,
 }: {
   children: ReactNode;
   tech?: ReactNode;
   mood?: "happy" | "wow" | "sly";
+  who?: Agent["id"];
 }) {
   return (
     <div className="flex items-end gap-3 sm:gap-4">
-      <Guide mood={mood} />
+      <Guide mood={mood} who={who} />
       <div className="cut pop-in relative flex-1 bg-cream px-5 py-4 text-ink shadow-[0_20px_50px_-20px_rgba(0,0,0,0.6)]">
         <div className="text-[1.05rem] leading-snug font-medium sm:text-lg">{children}</div>
         {tech && (

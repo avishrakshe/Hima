@@ -29,6 +29,19 @@ Hima is built so **a child can follow it**. You play a team of agents (Hima, War
 
 The landing page also has a **"Run real FROST"** button that runs a full 5-player game in your browser in under a second.
 
+### Zcash Academy (`/learn`)
+
+The FROST game teaches one advanced idea. The Academy teaches **Zcash itself** in four playable lessons, each hosted by an agent:
+
+| Lesson | You play | You learn |
+|---|---|---|
+| **01 · The Spy's View** (Orchard) | Send ZEC between glass (t1…) and shielded (u1…) addresses and watch a live "what the spy sees" ledger | The four transaction types (transparent, shielding, deshielding, fully shielded) and exactly which fields each one leaks. The fee is always public; memos only exist for shielded receivers |
+| **02 · The Colour Trick** (Hima) | A real interactive zero-knowledge proof: challenge a mystery prover (honest Hima or faking Vex) round after round, then give your verdict | Soundness by repetition (a faker survives n rounds with chance 1/2ⁿ) and zero knowledge: you end up sure without learning the secret |
+| **03 · The Glass Key** (Sapling & Warden) | Hand Warden a viewing key to audit a lemonade stand's shielded income, then try to spend with it | Viewing keys and selective disclosure: you can look, but you can't spend |
+| **04 · Boss: Defeat Vex** | A quiz battle: right answers hit Vex, wrong ones cost hearts | Review of everything above |
+
+Lessons unlock **Zcash Codex** cards: flip cards with well-established facts (21M supply, launched 2016 with zk-SNARKs, Sapling and Orchard pools, Halo 2 with no trusted setup, 512-byte encrypted memos, viewing keys, FROST). Progress is saved in the browser.
+
 ## How FROST works (simply)
 
 - **Threshold:** a key is split among *n* people so that any *t* of them can sign together, while *t−1* can't sign and learn nothing.

@@ -11,6 +11,7 @@ import { LevelTrickster } from "./LevelTrickster";
 import { BigButton, FriendToken, GameCtx, Guide, Narrator, Portrait, type LogEntry, type PushLog } from "./play-ui";
 import { friendOf, LEVELS, type LevelId } from "./world";
 import { agentById, art } from "@/lib/agents";
+import { completeLesson } from "@/lib/academy";
 
 type Screen = "team" | "map" | LevelId;
 type Engine = { status: "loading" } | { status: "ready"; version: string } | { status: "error"; message: string };
@@ -43,6 +44,7 @@ export function Game() {
   const keyMade = !!ceremony && Object.keys(ceremony.result).length === ceremony.n;
 
   const finishLevel = (level: LevelId, got: number) => {
+    completeLesson("frost"); // unlocks the FROST card in the Zcash Academy codex
     setStars((s) => ({ ...s, [level]: Math.max(s[level] ?? 0, got) }));
     setCelebrate({ level, stars: got });
     sfx("success");

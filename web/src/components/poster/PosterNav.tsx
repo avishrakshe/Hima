@@ -39,6 +39,11 @@ export function PosterNav() {
               </a>
             </li>
           ))}
+          <li>
+            <Link href="/learn" className="font-display text-[0.95rem] tracking-[0.08em] text-gold transition-colors hover:text-cream">
+              Academy
+            </Link>
+          </li>
         </ul>
         <div className="ml-auto flex items-center gap-3">
           <a href={site.repoUrl} target="_blank" rel="noreferrer" aria-label="Source on GitHub" className="grid size-10 place-items-center text-cream/70 hover:text-gold">

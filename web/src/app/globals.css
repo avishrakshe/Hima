@@ -377,6 +377,24 @@
 }
 .glow-pulse { animation: glow-pulse 5s ease-in-out infinite; }
 
+@keyframes coin-travel {
+  from { left: 12%; }
+  to { left: calc(88% - 3rem); }
+}
+
+@keyframes flip-in {
+  from { transform: rotateY(90deg); }
+  to { transform: rotateY(0); }
+}
+.flip-in { animation: flip-in 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }
+
+@keyframes hit {
+  0%, 100% { transform: translateX(0); filter: none; }
+  20% { transform: translateX(-10px); filter: brightness(2) saturate(0); }
+  60% { transform: translateX(8px); }
+}
+.hit { animation: hit 0.45s ease-out; }
+
 /* ---------------- Game animations ---------------- */
 @keyframes bob {
   0%, 100% { transform: translateY(0) rotate(-2deg); }

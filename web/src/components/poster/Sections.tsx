@@ -76,6 +76,58 @@ export function Missions() {
   );
 }
 
+/* ---------------- Zcash Academy teaser ---------------- */
+
+const ACADEMY: { n: string; title: string; teaches: string; agent: Agent["id"]; line: string }[] = [
+  { n: "01", title: "The Spy's View", teaches: "Transparent vs shielded", agent: "orchard", line: "Send ZEC four ways. See exactly what a spy can read." },
+  { n: "02", title: "The Colour Trick", teaches: "Zero-knowledge proofs", agent: "hima", line: "Play a real zero-knowledge proof and unmask a faker." },
+  { n: "03", title: "The Glass Key", teaches: "Viewing keys", agent: "warden", line: "Let someone check your money without letting them spend it." },
+  { n: "04", title: "Defeat Vex", teaches: "Boss battle quiz", agent: "vex", line: "Every right answer is an attack. Three hearts." },
+];
+
+export function AcademyTeaser() {
+  return (
+    <section id="academy" className="relative overflow-hidden bg-night py-28">
+      <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_20%_30%,rgb(244_183_40/0.12),transparent_70%)]" />
+      <div className="relative mx-auto max-w-[1400px] px-5 sm:px-8">
+        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div>
+            <Kicker>New · learn Zcash itself</Kicker>
+            <h2 className="font-display mt-3 text-7xl text-cream md:text-8xl">
+              Zcash <span className="text-gold">Academy</span>
+            </h2>
+          </div>
+          <p className="max-w-md text-lg text-cream/70">
+            Four playable lessons on how private money works: shielded payments, zero-knowledge proofs and viewing keys.
+            Collect the Codex cards, then beat the boss.
+          </p>
+        </div>
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {ACADEMY.map((a, i) => (
+            <Reveal key={a.n} delay={i * 90}>
+              <Link href="/learn" className="cut group relative block h-80 overflow-hidden bg-night-2">
+                <Image src={art(a.agent, "sm")} alt="" fill sizes="(min-width:1280px) 25vw, 50vw" className="object-cover object-[50%_15%] opacity-80 transition-all duration-700 group-hover:scale-110 group-hover:opacity-100" />
+                <div className="absolute inset-0 bg-gradient-to-t from-night via-night/50 to-transparent" />
+                <span className="font-display absolute left-4 top-3 text-5xl text-gold">{a.n}</span>
+                <div className="absolute inset-x-0 bottom-0 p-5">
+                  <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-gold">{a.teaches}</p>
+                  <h3 className="font-display mt-1 text-3xl text-cream">{a.title}</h3>
+                  <p className="mt-1 text-sm text-cream/70">{a.line}</p>
+                </div>
+              </Link>
+            </Reveal>
+          ))}
+        </div>
+        <div className="mt-10 flex justify-center">
+          <Link href="/learn" className="btn-poster">
+            Enter the academy <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ---------------- How it works (live 3D vault) ---------------- */
 
 const STEPS = [
