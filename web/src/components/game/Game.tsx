@@ -8,8 +8,9 @@ import { Confetti, setMuted, sfx, Stars } from "./fx";
 import { LevelDisguise } from "./LevelDisguise";
 import { LevelKey } from "./LevelKey";
 import { LevelTrickster } from "./LevelTrickster";
-import { BigButton, FriendToken, GameCtx, Himu, Narrator, type LogEntry, type PushLog } from "./play-ui";
+import { BigButton, FriendToken, GameCtx, Guide, Narrator, Portrait, type LogEntry, type PushLog } from "./play-ui";
 import { friendOf, LEVELS, type LevelId } from "./world";
+import { agentById, art } from "@/lib/agents";
 
 type Screen = "team" | "map" | LevelId;
 type Engine = { status: "loading" } | { status: "ready"; version: string } | { status: "error"; message: string };
@@ -64,16 +65,20 @@ export function Game() {
 
   return (
     <GameCtx.Provider value={ctx}>
-      <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,rgb(63_183_155/0.12),transparent_60%)]">
+      <div className="relative min-h-screen bg-night">
+        <div aria-hidden="true" className="pointer-events-none fixed inset-0 opacity-25 [mask-image:linear-gradient(to_bottom,black,transparent_70%)]">
+          <div className="absolute inset-0 bg-[url(/art/citadel-sm.webp)] bg-cover bg-center blur-sm" />
+        </div>
         {/* Top bar */}
-        <header className="sticky top-0 z-40 border-b border-glacier/10 bg-ink/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-40 border-b border-white/10 bg-night/85 backdrop-blur-xl">
           <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
-            <Link href="/" className="flex items-center gap-2" aria-label="Back to the Hima site">
-              <span className="font-serif text-2xl italic text-bone">Hima</span>
+            <Link href="/" className="flex items-baseline gap-2" aria-label="Back to the Hima site">
+              <span className="font-display text-3xl text-cream">Hima</span>
+              <span className="hidden font-mono text-[0.6rem] tracking-[0.3em] text-gold sm:inline">FROST</span>
             </Link>
             {ceremony && screen !== "team" && (
-              <button type="button" onClick={() => { sfx("tap"); setScreen("map"); }} className="rounded-full border border-bone/15 px-3 py-1.5 text-sm font-semibold text-bone hover:bg-bone/5">
-                🗺️ Map
+              <button type="button" onClick={() => { sfx("tap"); setScreen("map"); }} className="font-display border border-white/15 px-3 py-1.5 text-sm tracking-wider text-cream hover:border-gold hover:text-gold">
+                Map
               </button>
             )}
             <div className="ml-auto flex items-center gap-2">
@@ -93,11 +98,11 @@ export function Game() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+        <main className="relative mx-auto max-w-6xl px-4 py-8 sm:py-10">
           {engine.status === "loading" && (
             <div className="grid place-items-center py-24">
-              <Himu mood="wow" size={96} />
-              <p className="mt-4 text-lg text-moss">Waking up the magic… ❄️</p>
+              <Guide mood="wow" size={96} />
+              <p className="font-display mt-6 text-2xl tracking-wide text-cream">Waking up the vault…</p>
             </div>
           )}
           {engine.status === "error" && <p className="text-ember">The magic engine didn&apos;t load: {engine.message}</p>}
@@ -181,12 +186,12 @@ function TeamSetup({ onStart }: { onStart: (c: Ceremony) => void }) {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-8">
       <Narrator>
-        Hi, I&apos;m <b>Himu</b> ❄️! Let&apos;s build your team. Gather your friends around this screen. Everyone gets an
-        animal. 🦊🐼🐯🐸🐧
+        Hi, I&apos;m <b>Relay</b>, the coordinator! Let&apos;s assemble your team. Gather your friends around this screen.
+        Each friend plays one <b>agent</b>.
       </Narrator>
 
-      <section className="rounded-[2rem] border border-glacier/10 bg-ink-2/60 p-6">
-        <h2 className="text-xl font-bold">1. How many friends are playing?</h2>
+      <section className="cut bg-night-2/90 p-6">
+        <h2 className="font-display text-2xl tracking-wide text-cream">1. How many agents are playing?</h2>
         <div className="mt-4 grid grid-cols-3 gap-3">
           {[3, 4, 5].map((count) => (
             <button
@@ -194,15 +199,20 @@ function TeamSetup({ onStart }: { onStart: (c: Ceremony) => void }) {
               type="button"
               onClick={() => choose(count)}
               aria-pressed={n === count}
-              className={`rounded-2xl border-2 p-4 transition-all ${n === count ? "scale-[1.03] border-glacier bg-glacier/10" : "border-bone/10 hover:border-bone/30"}`}
+              className={`cut border-2 p-4 transition-all ${n === count ? "scale-[1.03] border-gold bg-gold/10" : "border-white/10 hover:border-white/30"}`}
             >
-              <span className="block text-3xl font-black">{count}</span>
-              <span className="mt-1 block text-lg">{Array.from({ length: count }, (_, i) => friendOf(i + 1).emoji).join("")}</span>
+              <span className="font-display block text-4xl text-cream">{count}</span>
+              <span className="mt-2 flex justify-center -space-x-2">
+                {Array.from({ length: count }, (_, i) => {
+                  const f = friendOf(i + 1);
+                  return <Portrait key={i} img={f.img} face={f.face} size={26} ring="#0b0f14" />;
+                })}
+              </span>
             </button>
           ))}
         </div>
 
-        <h2 className="mt-8 text-xl font-bold">2. How many friends must agree to open the chest?</h2>
+        <h2 className="font-display mt-8 text-2xl tracking-wide text-cream">2. How many must agree to open the chest?</h2>
         <div className="mt-4 flex flex-wrap gap-3">
           {Array.from({ length: n - 1 }, (_, i) => i + 2).map((k) => (
             <button
@@ -210,7 +220,7 @@ function TeamSetup({ onStart }: { onStart: (c: Ceremony) => void }) {
               type="button"
               onClick={() => { sfx("tap"); setT(k); }}
               aria-pressed={t === k}
-              className={`rounded-2xl border-2 px-5 py-3 text-lg font-bold transition-all ${t === k ? "scale-[1.03] border-brass bg-brass/10 text-brass" : "border-bone/10 text-bone hover:border-bone/30"}`}
+              className={`cut-sm font-display border-2 px-5 py-3 text-lg tracking-wide transition-all ${t === k ? "scale-[1.03] border-gold bg-gold/10 text-gold" : "border-white/10 text-cream hover:border-white/30"}`}
             >
               🔑 {k} of {n}
             </button>
@@ -291,14 +301,15 @@ function LevelMap({
                 type="button"
                 disabled={locked}
                 onClick={() => onPick(l.id as LevelId)}
-                className={`group flex w-full items-center gap-4 rounded-[1.75rem] border-2 p-5 text-left transition-all ${locked ? "cursor-not-allowed border-bone/5 opacity-50" : "border-glacier/20 bg-ink-2/70 hover:-translate-y-1 hover:border-glacier/60"}`}
+                className={`cut group relative flex w-full items-center gap-4 overflow-hidden border-2 bg-night-2/90 p-5 text-left transition-all ${locked ? "cursor-not-allowed border-white/5 opacity-50 grayscale" : "border-white/10 hover:-translate-y-1 hover:border-gold/70"}`}
               >
-                <span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-ink-3 text-4xl transition-transform group-hover:scale-110">
-                  {locked ? "🔒" : l.emoji}
-                </span>
+                <span
+                  className="size-20 shrink-0 bg-night bg-no-repeat transition-transform duration-500 cut-sm group-hover:scale-110"
+                  style={{ backgroundImage: `url(${art(l.agent, "sm")})`, backgroundSize: "260%", backgroundPosition: agentById(l.agent).face }}
+                />
                 <span className="min-w-0 flex-1">
-                  <span className="block font-mono text-xs text-moss">LEVEL {l.n}</span>
-                  <span className="block text-xl font-bold">{l.title}</span>
+                  <span className="block font-mono text-xs tracking-[0.2em] text-gold">MISSION 0{l.n}{locked ? " · LOCKED" : ""}</span>
+                  <span className="font-display block text-3xl text-cream">{l.title}</span>
                   <span className="block text-sm text-moss">{soon ? "Coming soon ❄️" : l.blurb}</span>
                   {!soon && <span className="mt-1 block"><Stars value={got} size="text-base" /></span>}
                 </span>
@@ -324,15 +335,18 @@ function LevelComplete({ level, stars, onNext, onMap }: { level: LevelId; stars:
   return (
     <div className="fixed inset-0 z-[60] grid place-items-center bg-ink/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Level complete">
       <Confetti />
-      <div className="pop-in relative w-full max-w-md rounded-[2rem] border border-brass/30 bg-ink-2 p-8 text-center shadow-2xl">
-        <div className="mx-auto -mt-20 mb-2 w-fit"><Himu mood="wow" size={96} /></div>
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">Level {info.n} complete!</p>
-        <h2 className="mt-2 text-3xl font-black">{info.title}</h2>
+      <div className="cut pop-in relative w-full max-w-md overflow-hidden bg-night-2 p-8 text-center shadow-2xl">
+        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-48 opacity-40 [mask-image:linear-gradient(to_bottom,black,transparent)]">
+          <div className="absolute inset-0 bg-cover bg-[50%_15%]" style={{ backgroundImage: `url(${art(info.agent, "sm")})` }} />
+        </div>
+        <div className="relative mx-auto mb-2 w-fit"><Guide mood="wow" size={96} /></div>
+        <p className="relative font-mono text-xs uppercase tracking-[0.3em] text-gold">Mission 0{info.n} complete</p>
+        <h2 className="font-display relative mt-2 text-5xl text-cream">{info.title}</h2>
         <div className="mt-4"><Stars value={stars} size="text-4xl" /></div>
-        <p className="mx-auto mt-5 w-fit rounded-full border border-glacier/30 bg-glacier/10 px-4 py-1.5 text-sm font-bold text-glacier">
-          🏅 Badge: {info.badge}
+        <p className="cut-sm relative mx-auto mt-5 w-fit bg-gold/15 px-4 py-1.5 font-display text-lg tracking-wide text-gold">
+          Badge · {info.badge}
         </p>
-        <div className="mt-8 flex flex-col gap-3">
+        <div className="relative mt-8 flex flex-col gap-3">
           <BigButton tone="brass" onClick={onNext}>{last ? "See your trophies 🏆" : "Next level →"}</BigButton>
           <button type="button" onClick={onMap} className="text-sm text-moss hover:text-bone">Back to the map</button>
         </div>

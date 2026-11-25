@@ -19,38 +19,58 @@ export function Tech({ children }: { children: ReactNode }) {
   return <p className="mt-2 font-mono text-[0.7rem] leading-relaxed text-glacier/80">⚙ {children}</p>;
 }
 
-/* ---------------- Himu, the guide ---------------- */
+/* ---------------- Portraits ---------------- */
 
-export function Himu({ mood = "happy", size = 76 }: { mood?: "happy" | "wow" | "sly"; size?: number }) {
+/** Round/cut portrait cropped from an agent's splash art. */
+export function Portrait({
+  img,
+  face,
+  size = 64,
+  ring,
+  shape = "round",
+  className = "",
+}: {
+  img: string;
+  face: string;
+  size?: number;
+  ring?: string;
+  shape?: "round" | "cut";
+  className?: string;
+}) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" className="bob shrink-0 drop-shadow-[0_8px_20px_rgba(159,231,212,0.35)]" aria-hidden="true">
-      <path d="M50 8 56 20 50 17 44 20Z" fill="#9fe7d4" />
-      <path d="M40 12 46 22 40 21Z M60 12 54 22 60 21Z" fill="#9fe7d4" opacity="0.7" />
-      <ellipse cx="50" cy="58" rx="36" ry="36" fill="#eef9f6" />
-      <ellipse cx="50" cy="70" rx="22" ry="20" fill="#d4f3ea" />
-      <circle cx="37" cy="50" r="11" fill="white" stroke="#cfe9e2" />
-      <circle cx="63" cy="50" r="11" fill="white" stroke="#cfe9e2" />
-      {mood === "sly" ? (
-        <>
-          <path d="M30 50 h14" stroke="#07110f" strokeWidth="4" strokeLinecap="round" />
-          <path d="M56 50 h14" stroke="#07110f" strokeWidth="4" strokeLinecap="round" />
-        </>
-      ) : (
-        <>
-          <circle cx={mood === "wow" ? 37 : 39} cy="51" r={mood === "wow" ? 6 : 5} fill="#07110f" />
-          <circle cx={mood === "wow" ? 63 : 65} cy="51" r={mood === "wow" ? 6 : 5} fill="#07110f" />
-          <circle cx="41" cy="49" r="1.8" fill="white" />
-          <circle cx="67" cy="49" r="1.8" fill="white" />
-        </>
-      )}
-      <path d={mood === "wow" ? "M46 62 54 62 50 70Z" : "M45 61 55 61 50 67Z"} fill="#ff9a5c" />
-      <circle cx="28" cy="62" r="4" fill="#ffb3a0" opacity="0.5" />
-      <circle cx="72" cy="62" r="4" fill="#ffb3a0" opacity="0.5" />
-    </svg>
+    <span
+      aria-hidden="true"
+      className={`block shrink-0 bg-night-2 bg-no-repeat ${shape === "round" ? "rounded-full" : "cut-sm"} ${className}`}
+      style={{
+        width: size,
+        height: size,
+        backgroundImage: `url(${img})`,
+        backgroundSize: "300%",
+        backgroundPosition: face,
+        boxShadow: ring ? `0 0 0 3px ${ring}, 0 0 24px -4px ${ring}` : undefined,
+      }}
+    />
   );
 }
 
-/** Himu says one thing at a time. */
+/* ---------------- Relay, the guide ---------------- */
+
+const RELAY = { img: "/art/relay-sm.webp", face: "56% 7%" };
+const VEX = { img: "/art/vex-sm.webp", face: "53% 6%" };
+
+export function Guide({ mood = "happy", size = 76 }: { mood?: "happy" | "wow" | "sly"; size?: number }) {
+  const who = mood === "sly" ? VEX : RELAY;
+  return (
+    <span className="bob relative block shrink-0">
+      <Portrait img={who.img} face={who.face} size={size} ring={mood === "sly" ? "#ff7a45" : "#f4b728"} />
+      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap bg-gold px-1.5 font-display text-[0.6rem] tracking-wider text-night">
+        {mood === "sly" ? "VEX" : "RELAY"}
+      </span>
+    </span>
+  );
+}
+
+/** The guide says one thing at a time. */
 export function Narrator({
   children,
   tech,
@@ -62,8 +82,8 @@ export function Narrator({
 }) {
   return (
     <div className="flex items-end gap-3 sm:gap-4">
-      <Himu mood={mood} />
-      <div className="pop-in relative flex-1 rounded-3xl rounded-bl-md border border-glacier/20 bg-bone px-5 py-4 text-ink shadow-[0_20px_50px_-20px_rgba(0,0,0,0.6)]">
+      <Guide mood={mood} />
+      <div className="cut pop-in relative flex-1 bg-cream px-5 py-4 text-ink shadow-[0_20px_50px_-20px_rgba(0,0,0,0.6)]">
         <div className="text-[1.05rem] leading-snug font-medium sm:text-lg">{children}</div>
         {tech && (
           <div className="[&_p]:!text-ink/60">
@@ -89,16 +109,16 @@ export function BigButton({
   tone?: "glacier" | "brass" | "ember";
 }) {
   const tones = {
-    glacier: "bg-glacier text-ink shadow-[0_8px_0_#3fb79b,0_20px_40px_-10px_rgba(159,231,212,0.6)]",
-    brass: "bg-brass text-ink shadow-[0_8px_0_#b88a32,0_20px_40px_-10px_rgba(232,182,90,0.6)]",
-    ember: "bg-ember text-ink shadow-[0_8px_0_#c24a18,0_20px_40px_-10px_rgba(255,122,69,0.6)]",
+    glacier: "bg-glacier text-night hover:bg-[#b9f3e4]",
+    brass: "bg-gold text-night hover:bg-[#ffd35a]",
+    ember: "bg-ember text-night hover:bg-[#ff9466]",
   };
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`min-h-14 rounded-2xl px-8 text-lg font-bold tracking-tight transition-transform active:translate-y-[6px] active:shadow-none disabled:pointer-events-none disabled:opacity-40 ${tones[tone]}`}
+      className={`cut min-h-14 px-8 font-display text-xl tracking-[0.05em] uppercase transition-[transform,background-color] hover:-translate-y-0.5 active:translate-y-0.5 disabled:pointer-events-none disabled:opacity-40 ${tones[tone]}`}
     >
       {children}
     </button>
@@ -178,13 +198,18 @@ export function FriendToken({ seat }: { seat: Seat }) {
   const body = (
     <>
       <span
-        className={`relative grid size-14 place-items-center rounded-full border-[3px] bg-ink-2 text-3xl transition-all duration-300 sm:size-16 sm:text-4xl ${hint ? "tap-hint" : ""} ${state === "dim" ? "opacity-40 grayscale" : ""} ${state === "bad" ? "wiggle" : ""}`}
-        style={{ borderColor: ring, boxShadow: state === "done" || state === "picked" ? `0 0 24px -4px ${friend.color}` : undefined }}
+        className={`relative grid size-16 place-items-center rounded-full border-[3px] bg-night-2 bg-no-repeat transition-all duration-300 sm:size-[4.5rem] ${hint ? "tap-hint" : ""} ${state === "dim" ? "opacity-40 grayscale" : ""} ${state === "bad" ? "wiggle" : ""}`}
+        style={{
+          borderColor: ring,
+          backgroundImage: `url(${friend.img})`,
+          backgroundSize: "300%",
+          backgroundPosition: friend.face,
+          boxShadow: state === "done" || state === "picked" ? `0 0 24px -4px ${friend.color}` : undefined,
+        }}
       >
-        {friend.emoji}
         {badge && <span className="pop-in absolute -right-2 -top-2 grid size-7 place-items-center rounded-full bg-ink text-base shadow-lg ring-2 ring-ink-3">{badge}</span>}
       </span>
-      <span className="mt-1 block text-center text-xs font-semibold text-bone sm:text-sm">{friend.name}</span>
+      <span className="font-display mt-1 block text-center text-sm tracking-wide text-cream sm:text-base">{friend.name}</span>
       {below && <span className="mt-1 flex justify-center">{below}</span>}
       {hint && !below && (
         <span className="mt-1 rounded-full bg-bone px-2 py-0.5 text-[0.65rem] font-bold text-ink">👆 tap me</span>
@@ -205,7 +230,7 @@ export function Scene({ narrator, stage, action }: { narrator: ReactNode; stage:
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       {narrator}
-      <div className="rounded-[2rem] border border-glacier/10 bg-ink-2/60 p-4 sm:p-6">{stage}</div>
+      <div className="cut bg-night-2/85 p-4 backdrop-blur-sm sm:p-6">{stage}</div>
       {action && <div className="flex flex-wrap items-center justify-center gap-3">{action}</div>}
     </div>
   );

@@ -18,7 +18,7 @@ But the people asked to *hold* the shares mostly don't know what a share is, wha
 
 ## What you play
 
-Hima is built so **a child can follow it**. A guide character, Himu ❄️, tells a story about animal friends and a treasure chest, gives one instruction at a time, and hands out stars and badges. Every story beat is a real protocol step. Flip on **Grown-up mode** to see the technical name of each step and a live protocol log of the real messages.
+Hima is built so **a child can follow it**. You play a team of agents (Hima, Warden, Orchard, Veil and Sapling) guided by **Relay**, the coordinator, against **Vex**, the trickster. Each agent embodies one Zcash concept: Orchard and Sapling are named after Zcash's shielded pools, and Relay is the FROST coordinator. Relay tells the story one instruction at a time and hands out stars and badges. Every story beat is a real protocol step. Flip on **Grown-up mode** to see the technical name of each step and a live protocol log of the real messages.
 
 | Level | Story (kid view) | What really happens |
 |---|---|---|
@@ -108,6 +108,10 @@ cd crates/frost-wasm && cargo test --release
 3. **Live on campus:** sessions through the Zcash India Community Club. Test: can a first-year explain a threshold signature after 15 minutes?
 4. **Ceremony kit:** the WASM core and ceremony UI, packaged for FROST wallet teams (key ceremonies, signer messaging, recovery flows).
 5. **"What am I co-signing?":** a plain-language transaction (PCZT) check before a signer contributes their share.
+
+## Art credits
+
+The seven agents and the citadel key art are original characters created for Hima, generated with Figma AI (gpt-image-2.5) and art-directed for this project. They're stored as WebP in `web/public/art/`.
 
 ## License
 

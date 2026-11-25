@@ -27,7 +27,17 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@theme {
+  --color-night: #0b0f14;
+  --color-night-2: #121821;
+  --color-gold: #f4b728;
+  --color-gold-deep: #c98f0e;
+  --color-cream: #ece6da;
+  --color-violet: #8b7bff;
+}
+
 @theme inline {
+  --font-display: var(--font-anton), Impact, "Arial Narrow", sans-serif;
   --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
@@ -241,6 +251,132 @@
   animation: shake 0.45s ease-in-out;
 }
 
+/* ---------------- Poster / game-site language ---------------- */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.outline-text {
+  color: transparent;
+  -webkit-text-stroke: 1.5px currentColor;
+}
+
+/* Angled corners, like a cut metal plate. */
+.cut {
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+}
+.cut-sm {
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+.slant-top {
+  clip-path: polygon(0 6vw, 100% 0, 100% 100%, 0 100%);
+}
+.slant-both {
+  clip-path: polygon(0 4vw, 100% 0, 100% calc(100% - 4vw), 0 100%);
+}
+
+.btn-poster {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 3.5rem;
+  padding: 0 2rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-night);
+  background: var(--color-gold);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  transition: background-color 0.25s, transform 0.4s var(--ease-out-expo);
+}
+.btn-poster:hover {
+  background: #ffd35a;
+  transform: translateY(-2px);
+}
+.btn-poster-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 3.5rem;
+  padding: 0 1.75rem;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-cream);
+  border: 1px solid rgb(236 230 218 / 0.35);
+  transition: border-color 0.25s, background-color 0.25s;
+}
+.btn-poster-ghost:hover {
+  border-color: var(--color-gold);
+  background: rgb(244 183 40 / 0.08);
+}
+
+/* Little square markers used as decoration, game-HUD style. */
+.tick::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 0.6rem;
+  background: var(--color-gold);
+  vertical-align: middle;
+}
+
+@keyframes kenburns {
+  from { transform: scale(1.12); }
+  to { transform: scale(1.02); }
+}
+.kenburns { animation: kenburns 9s cubic-bezier(0.2, 0.6, 0.2, 1) both; }
+
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+.float-y { animation: float-y 6s ease-in-out infinite; }
+
+@keyframes reveal-up {
+  from { clip-path: inset(100% 0 0 0); transform: translateY(40px); opacity: 0; }
+  to { clip-path: inset(0 0 0 0); transform: none; opacity: 1; }
+}
+.reveal-up { animation: reveal-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes slide-in-right {
+  from { transform: translateX(30px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.slide-in-right { animation: slide-in-right 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes bar-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.bar-fill { transform-origin: left; animation: bar-fill 1.1s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes snow {
+  from { transform: translate3d(0, -10vh, 0); }
+  to { transform: translate3d(var(--drift, 20px), 110vh, 0); }
+}
+.snowflake {
+  position: absolute;
+  top: 0;
+  border-radius: 999px;
+  background: white;
+  animation: snow var(--dur, 12s) linear var(--delay, 0s) infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.06); }
+}
+.glow-pulse { animation: glow-pulse 5s ease-in-out infinite; }
+
 /* ---------------- Game animations ---------------- */
 @keyframes bob {
   0%, 100% { transform: translateY(0) rotate(-2deg); }
@@ -304,7 +440,7 @@
 .chest-open { animation: chest-open 0.7s ease-out both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .bob, .tap-hint, .march, .confetti-piece, .wiggle { animation: none; }
+  .bob, .tap-hint, .march, .confetti-piece, .wiggle, .kenburns, .float-y, .snowflake, .glow-pulse { animation: none; }
   html { scroll-behavior: auto; }
   .js .reveal { opacity: 1; transform: none; transition: none; }
   .marquee, .pulse-dot { animation: none; }

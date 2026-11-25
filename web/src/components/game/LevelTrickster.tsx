@@ -178,9 +178,9 @@ export function LevelTrickster({ ceremony: c, onDone }: { ceremony: Ceremony; on
       <Scene
         narrator={
           <Narrator tech={`Threshold signing: any ${c.t} of ${c.n} key shares produce one signature. FROST v3 verifies each share and identifies cheaters.`}>
-            Time to open the treasure chest! 🎁 The chest opens when <b>{c.t} friends</b> sign the same letter. But
-            watch out… <b>one of them is a sneaky trickster</b> 😈 who will secretly sign a <i>different</i> letter. Can you
-            catch them?
+            Time to open the treasure chest! 🎁 It opens when <b>{c.t} agents</b> sign the same letter. But watch out…{" "}
+            <b>Vex the Trickster</b> 😈 is going to sneak inside one of them and sign a <i>different</i> letter. Can you
+            catch Vex?
           </Narrator>
         }
         stage={<RoundTable seats={seats} center={<span className="text-6xl">🎁</span>} />}
@@ -211,8 +211,8 @@ export function LevelTrickster({ ceremony: c, onDone }: { ceremony: Ceremony; on
       <Scene
         narrator={
           <Narrator mood="sly" tech="Each signer has committed to fresh single-use nonces. The coordinator has drawn a randomizer for this signature.">
-            Shhh… 🤫 I just whispered to one of them: <b>“You are the trickster!”</b> Now everyone signs the letter and
-            gives the magic machine a <b>puzzle piece</b> 🧩.
+            Heh heh… I&apos;m <b>Vex</b>. I just slipped inside <b>one of your agents</b>. 😈 When everyone signs, my
+            puppet will sign a different letter, and hand Relay a fake <b>puzzle piece</b> 🧩. Good luck!
           </Narrator>
         }
         stage={<RoundTable seats={seats} center={centerLetter} />}
@@ -225,8 +225,8 @@ export function LevelTrickster({ ceremony: c, onDone }: { ceremony: Ceremony; on
       <Scene
         narrator={
           <Narrator tech="Every signature share is just a large number. A share over the wrong message looks no different from an honest one.">
-            All the puzzle pieces 🧩 look <b>exactly the same</b>, right? So… <b>who do YOU think is the trickster?</b> Tap
-            a friend!
+            All the puzzle pieces 🧩 look <b>exactly the same</b>, right? So… <b>which agent is Vex hiding in?</b> Tap
+            your suspect!
           </Narrator>
         }
         stage={<RoundTable seats={seats} center={centerLetter} />}
@@ -246,10 +246,10 @@ export function LevelTrickster({ ceremony: c, onDone }: { ceremony: Ceremony; on
             mood={doneChecking ? "wow" : "happy"}
             tech="aggregate(): each share is checked against that signer's public verifying share from the key ceremony; FROST v3 returns the culprits."
           >
-            {!doneChecking && <>The magic checker 🔍 tests every puzzle piece, one by one…</>}
+            {!doneChecking && <>My checker 🔍 tests every puzzle piece, one by one…</>}
             {doneChecking && (
               <>
-                <b>Caught!</b> {culprits.map(name).join(", ")} was the trickster! 😈{" "}
+                <b>Caught!</b> Vex was hiding inside <b>{culprits.map(name).join(", ")}</b>! 😈{" "}
                 {guessedRight ? (
                   <>And <b>you guessed it!</b> Bonus star ⭐</>
                 ) : (
@@ -264,8 +264,12 @@ export function LevelTrickster({ ceremony: c, onDone }: { ceremony: Ceremony; on
             <RoundTable seats={seats} center={centerLetter} />
             {doneChecking && (
               <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                <span className="stamp block whitespace-nowrap rounded-xl border-4 border-ember bg-ink/85 px-4 py-1 text-2xl font-black tracking-widest text-ember">
-                  BUSTED: {culprits.map(name).join(", ")}!
+                <span className="stamp flex items-center gap-3 whitespace-nowrap border-4 border-ember bg-night/90 py-1 pl-1 pr-4 font-display text-3xl tracking-widest text-ember">
+                  <span
+                    className="block size-12 bg-no-repeat"
+                    style={{ backgroundImage: "url(/art/vex-sm.webp)", backgroundSize: "300%", backgroundPosition: "53% 6%" }}
+                  />
+                  Busted!
                 </span>
               </div>
             )}

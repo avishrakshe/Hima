@@ -2,7 +2,7 @@
  * Shared constants for the hero illustration. Kept separate from the 3D scene
  * so the HUD can import them without pulling three.js into the main bundle.
  */
-export const PLAYERS = ["Asha", "Kabir", "Meera", "Rohan", "Zoya"] as const;
+export const PLAYERS = ["Hima", "Warden", "Orchard", "Veil", "Sapling"] as const;
 export const THRESHOLD = 3;
 
 export type CeremonyPhase = {

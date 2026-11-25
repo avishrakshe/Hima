@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { Anton, Instrument_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { site } from "@/lib/site";
 import "./globals.css";
 
@@ -14,6 +14,13 @@ const serif = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
   style: ["normal", "italic"],
+  display: "swap",
+});
+
+const display = Anton({
+  variable: "--font-anton",
+  subsets: ["latin"],
+  weight: "400",
   display: "swap",
 });
 
@@ -51,7 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${sans.variable} ${serif.variable} ${mono.variable} antialiased`}
+      className={`${sans.variable} ${serif.variable} ${mono.variable} ${display.variable} antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: jsFlag }} />

@@ -18,7 +18,7 @@ import {
   type SigningRound,
 } from "@/lib/frost";
 
-export const DEFAULT_NAMES = ["Asha", "Kabir", "Meera", "Rohan", "Zoya"] as const;
+export const DEFAULT_NAMES = ["Hima", "Warden", "Orchard", "Veil", "Sapling"] as const;
 
 export type Player = { index: number; name: string };
 

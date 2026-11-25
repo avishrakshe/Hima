@@ -1,19 +1,20 @@
 /**
- * The story layer: friendly characters and kid-level words mapped onto real
- * protocol steps. The comments say which FROST concept each metaphor stands for.
+ * The story layer: the agents and kid-level words mapped onto real protocol
+ * steps. Comments in each level say which FROST concept each metaphor stands for.
  */
 
-export type Friend = { name: string; emoji: string; color: string };
+import { agentById, art, type Agent } from "@/lib/agents";
 
-export const FRIENDS: Friend[] = [
-  { name: "Asha", emoji: "🦊", color: "#ff9a5c" },
-  { name: "Kabir", emoji: "🐼", color: "#9fe7d4" },
-  { name: "Meera", emoji: "🐯", color: "#e8b65a" },
-  { name: "Rohan", emoji: "🐸", color: "#8fd694" },
-  { name: "Zoya", emoji: "🐧", color: "#9ab8ff" },
-];
+export type Friend = { name: string; agent: Agent["id"]; color: string; face: string; img: string };
 
-/** Player index (1-based) to their friend card. */
+const PLAYABLE: Agent["id"][] = ["hima", "warden", "orchard", "veil", "sapling"];
+
+export const FRIENDS: Friend[] = PLAYABLE.map((id) => {
+  const a = agentById(id);
+  return { name: a.name, agent: id, color: a.color, face: a.face, img: art(id, "sm") };
+});
+
+/** Player index (1-based) to their agent card. */
 export const friendOf = (index: number, name?: string): Friend => {
   const f = FRIENDS[(index - 1) % FRIENDS.length];
   return name ? { ...f, name } : f;
@@ -29,13 +30,13 @@ export const LEVELS: {
   n: number;
   title: string;
   blurb: string;
-  emoji: string;
+  agent: Agent["id"];
   badge: string;
   /** What it really is, shown in grown-up mode. */
   tech: string;
 }[] = [
-  { id: "key", n: 1, title: "The Magic Key", blurb: "Make a key that nobody holds", emoji: "🔑", badge: "Key Maker", tech: "Distributed key generation (DKG)" },
-  { id: "trickster", n: 2, title: "Catch the Trickster", blurb: "One friend is cheating. Who?", emoji: "🕵️", badge: "Trickster Catcher", tech: "Threshold signing + cheater detection" },
-  { id: "old", n: 3, title: "Old Snowflakes", blurb: "Coming soon", emoji: "❄️", badge: "", tech: "Share refresh (stretch goal)" },
-  { id: "disguise", n: 4, title: "Disguise Party", blurb: "Hide from the spies", emoji: "🎭", badge: "Master of Disguise", tech: "Re-randomized FROST (unlinkability)" },
+  { id: "key", n: 1, title: "The Magic Key", blurb: "Forge a key that nobody holds", agent: "hima", badge: "Key Maker", tech: "Distributed key generation (DKG)" },
+  { id: "trickster", n: 2, title: "Catch the Trickster", blurb: "Vex corrupted an agent. Who?", agent: "vex", badge: "Trickster Catcher", tech: "Threshold signing + cheater detection" },
+  { id: "old", n: 3, title: "Old Snowflakes", blurb: "Coming soon", agent: "warden", badge: "", tech: "Share refresh (stretch goal)" },
+  { id: "disguise", n: 4, title: "Disguise Party", blurb: "Hide from the spies", agent: "veil", badge: "Master of Disguise", tech: "Re-randomized FROST (unlinkability)" },
 ];
