@@ -1,0 +1,17 @@
+# Rust
+crates/**/target/
+
+# Node / Next.js
+node_modules/
+web/.next/
+web/out/
+web/next-env.d.ts
+*.tsbuildinfo
+
+# Env & local
+.env*
+!.env.example
+.vercel/
+.DS_Store
+Thumbs.db
+*.log
