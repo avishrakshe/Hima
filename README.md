@@ -6,7 +6,7 @@
 
 > **Unaudited. For education only.** Hima signs demo messages, never transactions. No ZEC, no wallets, no seed phrases.
 
-**▶ Play:** _live URL below_ · **Demo video:** _coming soon_
+**▶ Live:** https://hima-dusky.vercel.app · **Play:** https://hima-dusky.vercel.app/play · **Demo video:** _coming soon_
 
 ---
 

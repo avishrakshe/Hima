@@ -55,9 +55,9 @@ export function Hero() {
 
           <p className="mt-7 max-w-xl text-lg leading-relaxed text-moss sm:text-xl">
             Hima is a multiplayer browser game that teaches Zcash&apos;s threshold
-            signatures by having you <span className="text-bone">do them</span>. Friends on their own
-            phones generate one shared key, co-sign with it, unmask a cheater, and watch a signature
-            become unlinkable.
+            signatures by having you <span className="text-bone">do them</span>. Gather friends around
+            one screen, generate one shared key, co-sign with it, unmask a cheater, and watch a
+            signature become unlinkable.
           </p>
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
