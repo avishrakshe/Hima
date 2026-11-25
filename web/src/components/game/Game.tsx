@@ -1,24 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { frost, loadFrost } from "@/lib/frost";
 import { DEFAULT_NAMES, newCeremony, type Ceremony } from "@/lib/game/engine";
-import { Wordmark } from "../Logo";
-import { ArrowIcon, CheckIcon } from "../icons";
-import { Avatar, type LogEntry, type PushLog } from "./kit";
-import { LevelCeremony } from "./LevelCeremony";
-import { LevelCheater } from "./LevelCheater";
-import { LevelUnlinkable } from "./LevelUnlinkable";
+import { Confetti, setMuted, sfx, Stars } from "./fx";
+import { LevelDisguise } from "./LevelDisguise";
+import { LevelKey } from "./LevelKey";
+import { LevelTrickster } from "./LevelTrickster";
+import { BigButton, FriendToken, GameCtx, Himu, Narrator, type LogEntry, type PushLog } from "./play-ui";
+import { friendOf, LEVELS, type LevelId } from "./world";
 
-type Level = "setup" | "ceremony" | "cheater" | "unlinkable" | "done";
+type Screen = "team" | "map" | LevelId;
 type Engine = { status: "loading" } | { status: "ready"; version: string } | { status: "error"; message: string };
 
 export function Game() {
   const [engine, setEngine] = useState<Engine>({ status: "loading" });
-  const [level, setLevel] = useState<Level>("setup");
+  const [screen, setScreen] = useState<Screen>("team");
   const [ceremony, setCeremony] = useState<Ceremony | null>(null);
-  const [completed, setCompleted] = useState<Set<Level>>(new Set());
+  const [stars, setStars] = useState<Partial<Record<LevelId, number>>>({});
+  const [celebrate, setCelebrate] = useState<{ level: LevelId; stars: number } | null>(null);
+  const [grown, setGrown] = useState(false);
+  const [mute, setMute] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
   const [log, setLog] = useState<LogEntry[]>([]);
   const nextId = useRef(1);
 
@@ -32,272 +36,312 @@ export function Game() {
     const id = nextId.current++;
     setLog((l) => [...l, { ...entry, id }]);
   }, []);
+  const ctx = useMemo(() => ({ grown, log: push }), [grown, push]);
 
-  const complete = (lvl: Level, next: Level) => {
-    setCompleted((s) => new Set(s).add(lvl));
-    setLevel(next);
-    window.scrollTo({ top: 0 });
+  const totalStars = Object.values(stars).reduce((a, b) => a + (b ?? 0), 0);
+  const keyMade = !!ceremony && Object.keys(ceremony.result).length === ceremony.n;
+
+  const finishLevel = (level: LevelId, got: number) => {
+    setStars((s) => ({ ...s, [level]: Math.max(s[level] ?? 0, got) }));
+    setCelebrate({ level, stars: got });
+    sfx("success");
+    window.setTimeout(() => sfx("star"), 600);
   };
 
-  const ceremonyDone = !!ceremony && Object.keys(ceremony.result).length === ceremony.n;
-
-  const reset = () => {
+  const newTeam = () => {
     setCeremony(null);
-    setCompleted(new Set());
+    setStars({});
     setLog([]);
-    setLevel("setup");
+    setScreen("team");
+  };
+
+  const toggleMute = () => {
+    setMute((m) => {
+      setMuted(!m);
+      return !m;
+    });
   };
 
   return (
-    <div className="min-h-screen">
-      {/* Top bar */}
-      <header className="sticky top-0 z-40 border-b border-glacier/10 bg-ink/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-[1500px] items-center gap-4 px-5">
-          <Link href="/" aria-label="Back to the Hima site">
-            <Wordmark />
-          </Link>
-          <div className="ml-auto flex items-center gap-2">
-            {ceremony && (
-              <span className="chip hidden sm:inline-flex">
-                hot-seat · {ceremony.t} of {ceremony.n}
-              </span>
-            )}
-            <span className="chip" title={engine.status === "ready" ? engine.version : undefined}>
-              <span
-                className={`size-1.5 rounded-full ${engine.status === "ready" ? "bg-glacier pulse-dot" : engine.status === "error" ? "bg-ember" : "bg-brass"}`}
-              />
-              {engine.status === "ready" ? "FROST engine ready" : engine.status === "error" ? "engine failed" : "loading engine…"}
-            </span>
-            {ceremony && (
-              <button type="button" onClick={reset} className="btn btn-ghost !h-9 !px-3.5 text-xs">
-                New table
+    <GameCtx.Provider value={ctx}>
+      <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,rgb(63_183_155/0.12),transparent_60%)]">
+        {/* Top bar */}
+        <header className="sticky top-0 z-40 border-b border-glacier/10 bg-ink/80 backdrop-blur-xl">
+          <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
+            <Link href="/" className="flex items-center gap-2" aria-label="Back to the Hima site">
+              <span className="font-serif text-2xl italic text-bone">Hima</span>
+            </Link>
+            {ceremony && screen !== "team" && (
+              <button type="button" onClick={() => { sfx("tap"); setScreen("map"); }} className="rounded-full border border-bone/15 px-3 py-1.5 text-sm font-semibold text-bone hover:bg-bone/5">
+                🗺️ Map
               </button>
             )}
+            <div className="ml-auto flex items-center gap-2">
+              <span className="rounded-full bg-brass/15 px-3 py-1.5 text-sm font-bold text-brass" aria-label={`${totalStars} stars`}>
+                ⭐ {totalStars}
+              </span>
+              <button type="button" onClick={toggleMute} className="grid size-9 place-items-center rounded-full border border-bone/15 text-base" aria-label={mute ? "Turn sound on" : "Turn sound off"}>
+                {mute ? "🔇" : "🔊"}
+              </button>
+              <label className="flex cursor-pointer items-center gap-2 rounded-full border border-bone/15 py-1.5 pl-3 pr-1.5 text-xs font-semibold text-moss">
+                <span className="hidden sm:inline">Grown-up mode</span>
+                <span className="sm:hidden">⚙</span>
+                <input type="checkbox" className="peer sr-only" checked={grown} onChange={(e) => setGrown(e.target.checked)} />
+                <span className="relative h-5 w-9 rounded-full bg-bone/15 transition-colors peer-checked:bg-glacier after:absolute after:left-0.5 after:top-0.5 after:size-4 after:rounded-full after:bg-bone after:transition-transform peer-checked:after:translate-x-4" />
+              </label>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="mx-auto grid max-w-[1500px] gap-6 px-5 py-8 lg:grid-cols-[220px_1fr] xl:grid-cols-[220px_1fr_340px]">
-        {/* Level nav */}
-        <nav aria-label="Levels" className="lg:sticky lg:top-24 lg:self-start">
-          <ol className="flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] lg:flex-col lg:overflow-visible lg:pb-0">
-            <NavItem n={0} label="Set up the table" active={level === "setup"} done={!!ceremony} onClick={() => setLevel("setup")} enabled={!ceremony} />
-            <NavItem n={1} label="Key Ceremony" active={level === "ceremony"} done={completed.has("ceremony")} onClick={() => setLevel("ceremony")} enabled={!!ceremony} />
-            <NavItem n={2} label="Catch the Cheater" active={level === "cheater"} done={completed.has("cheater")} onClick={() => setLevel("cheater")} enabled={ceremonyDone} />
-            <NavItem n={3} label="Old Shares" note="stretch · soon" active={false} done={false} onClick={() => undefined} enabled={false} />
-            <NavItem n={4} label="Unlinkable" active={level === "unlinkable"} done={completed.has("unlinkable")} onClick={() => setLevel("unlinkable")} enabled={ceremonyDone} />
-          </ol>
-          <p className="mt-6 hidden text-xs leading-relaxed text-moss-deep lg:block">
-            Every step runs the Zcash Foundation&apos;s FROST v3 (re-randomized RedPallas) in this tab. Unaudited, demo keys
-            only, no funds.
-          </p>
-        </nav>
-
-        <main className="min-w-0">
-          {engine.status === "error" && (
-            <div className="panel !border-ember/40 p-6 text-ember">
-              Couldn&apos;t load the WebAssembly engine: {engine.message}
+        <main className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+          {engine.status === "loading" && (
+            <div className="grid place-items-center py-24">
+              <Himu mood="wow" size={96} />
+              <p className="mt-4 text-lg text-moss">Waking up the magic… ❄️</p>
             </div>
           )}
-          {engine.status === "loading" && <p className="font-mono text-sm text-moss">› loading frost-wasm…</p>}
+          {engine.status === "error" && <p className="text-ember">The magic engine didn&apos;t load: {engine.message}</p>}
+
           {engine.status === "ready" && (
             <>
-              {level === "setup" && (
-                <Setup
+              {screen === "team" && (
+                <TeamSetup
                   onStart={(c) => {
                     setCeremony(c);
                     setLog([]);
-                    push({ actor: "Table", kind: "local", text: `new ${c.t}-of-${c.n} table: ${c.players.map((p) => p.name).join(", ")}` });
-                    setLevel("ceremony");
+                    push({ actor: "Team", kind: "local", text: `new ${c.t}-of-${c.n} team: ${c.players.map((p) => p.name).join(", ")}` });
+                    sfx("success");
+                    setScreen("key");
                   }}
                 />
               )}
-              {level === "ceremony" && ceremony && (
-                <LevelCeremony ceremony={ceremony} setCeremony={setCeremony} log={push} onNext={() => complete("ceremony", "cheater")} />
+              {screen === "map" && ceremony && (
+                <LevelMap
+                  stars={stars}
+                  keyMade={keyMade}
+                  onPick={(id) => { sfx("tap"); setScreen(id); }}
+                  onNewTeam={newTeam}
+                />
               )}
-              {level === "cheater" && ceremony && ceremonyDone && (
-                <LevelCheater ceremony={ceremony} log={push} onNext={() => complete("cheater", "unlinkable")} />
+              {screen === "key" && ceremony && (
+                <LevelKey ceremony={ceremony} setCeremony={setCeremony} onDone={(s) => finishLevel("key", s)} />
               )}
-              {level === "unlinkable" && ceremony && ceremonyDone && (
-                <LevelUnlinkable ceremony={ceremony} log={push} onNext={() => complete("unlinkable", "done")} />
+              {screen === "trickster" && ceremony && keyMade && (
+                <LevelTrickster key={`t-${totalStars}`} ceremony={ceremony} onDone={(s) => finishLevel("trickster", s)} />
               )}
-              {level === "done" && <Done onRestart={reset} />}
+              {screen === "disguise" && ceremony && keyMade && (
+                <LevelDisguise ceremony={ceremony} onDone={(s) => finishLevel("disguise", s)} />
+              )}
             </>
           )}
         </main>
 
-        <ProtocolLog entries={log} />
+        {/* Grown-up protocol log */}
+        {grown && (
+          <div className="fixed bottom-4 right-4 z-50 flex max-w-[calc(100vw-2rem)] flex-col items-end gap-2">
+            {logOpen && <ProtocolLog entries={log} version={engine.status === "ready" ? engine.version : ""} />}
+            <button type="button" onClick={() => setLogOpen((o) => !o)} className="rounded-full border border-glacier/30 bg-ink-2 px-4 py-2 font-mono text-xs text-glacier shadow-lg">
+              {logOpen ? "hide" : "show"} protocol log ({log.length})
+            </button>
+          </div>
+        )}
+
+        {celebrate && (
+          <LevelComplete
+            level={celebrate.level}
+            stars={celebrate.stars}
+            onMap={() => { setCelebrate(null); setScreen("map"); }}
+            onNext={() => {
+              const order: LevelId[] = ["key", "trickster", "disguise"];
+              const next = order[order.indexOf(celebrate.level) + 1];
+              setCelebrate(null);
+              setScreen(next ?? "map");
+            }}
+          />
+        )}
       </div>
-    </div>
+    </GameCtx.Provider>
   );
 }
 
-function NavItem({
-  n,
-  label,
-  note,
-  active,
-  done,
-  enabled,
-  onClick,
-}: {
-  n: number;
-  label: string;
-  note?: string;
-  active: boolean;
-  done: boolean;
-  enabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <li className="shrink-0">
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={!enabled && !active}
-        aria-current={active ? "step" : undefined}
-        className={[
-          "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors",
-          active
-            ? "border-glacier/40 bg-glacier/10 text-bone"
-            : enabled
-              ? "border-transparent text-moss hover:bg-bone/5 hover:text-bone"
-              : "cursor-not-allowed border-transparent text-moss-deep",
-        ].join(" ")}
-      >
-        <span
-          className={`grid size-6 shrink-0 place-items-center rounded-full border font-mono text-[0.65rem] ${done ? "border-glacier bg-glacier text-ink" : "border-bone/20"}`}
-        >
-          {done ? <CheckIcon className="size-3.5" /> : n === 0 ? "◆" : n}
-        </span>
-        <span className="flex flex-col">
-          {label}
-          {note && <span className="font-mono text-[0.6rem] uppercase tracking-widest text-brass/70">{note}</span>}
-        </span>
-      </button>
-    </li>
-  );
-}
+/* ---------------- Team setup ---------------- */
 
-function Setup({ onStart }: { onStart: (c: Ceremony) => void }) {
+function TeamSetup({ onStart }: { onStart: (c: Ceremony) => void }) {
   const [n, setN] = useState(5);
   const [t, setT] = useState(3);
   const [names, setNames] = useState<string[]>([...DEFAULT_NAMES]);
+  const [editing, setEditing] = useState(false);
 
-  const setCount = (count: number) => {
+  const choose = (count: number) => {
+    sfx("tap");
     setN(count);
     setT((cur) => Math.min(Math.max(cur, 2), count));
   };
 
-  const start = () => {
-    const players = names.slice(0, n).map((name, i) => ({ index: i + 1, name: name.trim() || DEFAULT_NAMES[i] }));
-    onStart(newCeremony(players, t));
-  };
-
   return (
-    <div className="space-y-8">
-      <header className="border-b border-glacier/10 pb-6">
-        <p className="eyebrow">Hot-seat mode</p>
-        <h1 className="display mt-2 text-[clamp(2rem,4vw,3.2rem)]">
-          Set up the table. <em className="text-glacier">One screen, real cryptography.</em>
-        </h1>
-        <p className="mt-3 max-w-2xl text-moss">
-          Gather your friends around one screen (or a projector). Each player taps their own card when it&apos;s their turn.
-          Room mode, with one phone each, is next on the roadmap.
-        </p>
-      </header>
+    <div className="mx-auto flex max-w-3xl flex-col gap-8">
+      <Narrator>
+        Hi, I&apos;m <b>Himu</b> ❄️! Let&apos;s build your team. Gather your friends around this screen. Everyone gets an
+        animal. 🦊🐼🐯🐸🐧
+      </Narrator>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <section className="panel space-y-6 p-6">
-          <div>
-            <p className="eyebrow">Players · n</p>
-            <Segmented options={[3, 4, 5]} value={n} onChange={setCount} />
-          </div>
-          <div>
-            <p className="eyebrow">Threshold · t</p>
-            <Segmented options={Array.from({ length: n - 1 }, (_, i) => i + 2)} value={t} onChange={setT} />
-            <p className="mt-3 text-sm text-moss">
-              Any {t} of {n} can sign. Tip: keep t below n so the group survives one cheater.
-            </p>
-          </div>
-        </section>
-
-        <section className="panel space-y-3 p-6">
-          <p className="eyebrow">Players</p>
-          {names.slice(0, n).map((name, i) => (
-            <label key={i} className="flex items-center gap-3">
-              <Avatar name={name || "?"} state="done" size="sm" />
-              <span className="sr-only">Player {i + 1} name</span>
-              <input
-                value={name}
-                maxLength={16}
-                onChange={(e) => setNames((all) => all.map((x, j) => (j === i ? e.target.value : x)))}
-                className="w-full rounded-lg border border-glacier/15 bg-ink px-3 py-2 text-bone outline-none focus:border-glacier/50"
-              />
-              <span className="font-mono text-xs text-moss-deep">#{i + 1}</span>
-            </label>
+      <section className="rounded-[2rem] border border-glacier/10 bg-ink-2/60 p-6">
+        <h2 className="text-xl font-bold">1. How many friends are playing?</h2>
+        <div className="mt-4 grid grid-cols-3 gap-3">
+          {[3, 4, 5].map((count) => (
+            <button
+              key={count}
+              type="button"
+              onClick={() => choose(count)}
+              aria-pressed={n === count}
+              className={`rounded-2xl border-2 p-4 transition-all ${n === count ? "scale-[1.03] border-glacier bg-glacier/10" : "border-bone/10 hover:border-bone/30"}`}
+            >
+              <span className="block text-3xl font-black">{count}</span>
+              <span className="mt-1 block text-lg">{Array.from({ length: count }, (_, i) => friendOf(i + 1).emoji).join("")}</span>
+            </button>
           ))}
-        </section>
-      </div>
+        </div>
 
-      <button type="button" onClick={start} className="btn btn-primary">
-        Start the key ceremony <ArrowIcon />
-      </button>
-    </div>
-  );
-}
+        <h2 className="mt-8 text-xl font-bold">2. How many friends must agree to open the chest?</h2>
+        <div className="mt-4 flex flex-wrap gap-3">
+          {Array.from({ length: n - 1 }, (_, i) => i + 2).map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => { sfx("tap"); setT(k); }}
+              aria-pressed={t === k}
+              className={`rounded-2xl border-2 px-5 py-3 text-lg font-bold transition-all ${t === k ? "scale-[1.03] border-brass bg-brass/10 text-brass" : "border-bone/10 text-bone hover:border-bone/30"}`}
+            >
+              🔑 {k} of {n}
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-moss">
+          Any <b className="text-bone">{t}</b> friends together can open it. {t - 1} alone can&apos;t.{" "}
+          {t === n && <span className="text-ember">Tip: pick fewer than {n} so a cheater can&apos;t block the team!</span>}
+        </p>
 
-function Segmented({ options, value, onChange }: { options: number[]; value: number; onChange: (v: number) => void }) {
-  return (
-    <div className="mt-3 inline-flex rounded-full border border-glacier/15 bg-ink p-1">
-      {options.map((o) => (
-        <button
-          key={o}
-          type="button"
-          aria-pressed={value === o}
-          onClick={() => onChange(o)}
-          className={`h-9 min-w-12 rounded-full px-4 font-mono text-sm transition-colors ${value === o ? "bg-glacier text-ink" : "text-moss hover:text-bone"}`}
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
+          {Array.from({ length: n }, (_, i) => (
+            <div key={i} className="flex flex-col items-center gap-1">
+              <FriendToken seat={{ index: i + 1, friend: friendOf(i + 1, names[i]), state: "done" }} />
+              {editing && (
+                <input
+                  value={names[i]}
+                  maxLength={12}
+                  aria-label={`Name for friend ${i + 1}`}
+                  onChange={(e) => setNames((all) => all.map((x, j) => (j === i ? e.target.value : x)))}
+                  className="w-20 rounded-lg border border-glacier/20 bg-ink px-2 py-1 text-center text-xs text-bone outline-none focus:border-glacier"
+                />
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 text-center">
+          <button type="button" onClick={() => setEditing((e) => !e)} className="text-sm text-moss underline-offset-4 hover:text-bone hover:underline">
+            {editing ? "Done ✓" : "✏️ Use your own names"}
+          </button>
+        </div>
+      </section>
+
+      <div className="flex justify-center">
+        <BigButton
+          onClick={() =>
+            onStart(newCeremony(names.slice(0, n).map((nm, i) => ({ index: i + 1, name: nm.trim() || DEFAULT_NAMES[i] })), t))
+          }
         >
-          {o}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function Done({ onRestart }: { onRestart: () => void }) {
-  return (
-    <div className="panel relative overflow-hidden px-8 py-14 text-center">
-      <div aria-hidden="true" className="absolute left-1/2 top-0 h-60 w-[60%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brass/20 blur-[90px]" />
-      <p className="eyebrow relative !text-brass">Table complete</p>
-      <h1 className="display relative mx-auto mt-4 max-w-2xl text-[clamp(2.2rem,4.5vw,3.6rem)]">
-        You split a key, caught a cheater, <em className="text-glacier">and vanished on-chain.</em>
-      </h1>
-      <ul className="relative mx-auto mt-8 grid max-w-2xl gap-3 text-left sm:grid-cols-3">
-        {[
-          ["Ceremony", "One key, never held whole"],
-          ["Cheater", "Named by the math, not a vote"],
-          ["Unlinkable", "Every signature, a fresh key"],
-        ].map(([t, d]) => (
-          <li key={t} className="rounded-xl border border-glacier/15 bg-ink/60 p-4">
-            <p className="flex items-center gap-2 font-semibold">
-              <CheckIcon className="size-4 text-glacier" /> {t}
-            </p>
-            <p className="mt-1 text-sm text-moss">{d}</p>
-          </li>
-        ))}
-      </ul>
-      <div className="relative mt-10 flex flex-wrap justify-center gap-3">
-        <button type="button" onClick={onRestart} className="btn btn-primary">
-          New table <ArrowIcon />
-        </button>
-        <Link href="/" className="btn btn-ghost">
-          Back to the site
-        </Link>
+          Start the adventure! 🚀
+        </BigButton>
       </div>
     </div>
   );
 }
+
+/* ---------------- Level map ---------------- */
+
+function LevelMap({
+  stars,
+  keyMade,
+  onPick,
+  onNewTeam,
+}: {
+  stars: Partial<Record<LevelId, number>>;
+  keyMade: boolean;
+  onPick: (id: LevelId) => void;
+  onNewTeam: () => void;
+}) {
+  const allDone = LEVELS.every((l) => l.id === "old" || (stars[l.id as LevelId] ?? 0) > 0);
+  return (
+    <div className="mx-auto flex max-w-4xl flex-col gap-8">
+      <Narrator mood={allDone ? "wow" : "happy"} tech="Levels map to: DKG · threshold signing with cheater detection · share refresh (not built) · re-randomized FROST.">
+        {allDone ? (
+          <>You finished every level! 🏆 You now know how Zcash teams share a key, catch cheaters and stay private.</>
+        ) : (
+          <>Pick your next adventure! Each level teaches one secret of the magic key. 🗝️</>
+        )}
+      </Narrator>
+      <ol className="grid gap-4 sm:grid-cols-2">
+        {LEVELS.map((l) => {
+          const soon = l.id === "old";
+          const locked = soon || (l.id !== "key" && !keyMade);
+          const got = soon ? 0 : stars[l.id as LevelId] ?? 0;
+          return (
+            <li key={l.id}>
+              <button
+                type="button"
+                disabled={locked}
+                onClick={() => onPick(l.id as LevelId)}
+                className={`group flex w-full items-center gap-4 rounded-[1.75rem] border-2 p-5 text-left transition-all ${locked ? "cursor-not-allowed border-bone/5 opacity-50" : "border-glacier/20 bg-ink-2/70 hover:-translate-y-1 hover:border-glacier/60"}`}
+              >
+                <span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-ink-3 text-4xl transition-transform group-hover:scale-110">
+                  {locked ? "🔒" : l.emoji}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-mono text-xs text-moss">LEVEL {l.n}</span>
+                  <span className="block text-xl font-bold">{l.title}</span>
+                  <span className="block text-sm text-moss">{soon ? "Coming soon ❄️" : l.blurb}</span>
+                  {!soon && <span className="mt-1 block"><Stars value={got} size="text-base" /></span>}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      <div className="flex justify-center">
+        <button type="button" onClick={onNewTeam} className="text-sm text-moss underline-offset-4 hover:text-bone hover:underline">
+          Start over with a new team
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Level complete ---------------- */
+
+function LevelComplete({ level, stars, onNext, onMap }: { level: LevelId; stars: number; onNext: () => void; onMap: () => void }) {
+  const info = LEVELS.find((l) => l.id === level)!;
+  const last = level === "disguise";
+  return (
+    <div className="fixed inset-0 z-[60] grid place-items-center bg-ink/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Level complete">
+      <Confetti />
+      <div className="pop-in relative w-full max-w-md rounded-[2rem] border border-brass/30 bg-ink-2 p-8 text-center shadow-2xl">
+        <div className="mx-auto -mt-20 mb-2 w-fit"><Himu mood="wow" size={96} /></div>
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-brass">Level {info.n} complete!</p>
+        <h2 className="mt-2 text-3xl font-black">{info.title}</h2>
+        <div className="mt-4"><Stars value={stars} size="text-4xl" /></div>
+        <p className="mx-auto mt-5 w-fit rounded-full border border-glacier/30 bg-glacier/10 px-4 py-1.5 text-sm font-bold text-glacier">
+          🏅 Badge: {info.badge}
+        </p>
+        <div className="mt-8 flex flex-col gap-3">
+          <BigButton tone="brass" onClick={onNext}>{last ? "See your trophies 🏆" : "Next level →"}</BigButton>
+          <button type="button" onClick={onMap} className="text-sm text-moss hover:text-bone">Back to the map</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Protocol log (grown-up mode) ---------------- */
 
 const KIND: Record<LogEntry["kind"], { tag: string; cls: string }> = {
   broadcast: { tag: "→ all", cls: "text-glacier" },
@@ -308,39 +352,18 @@ const KIND: Record<LogEntry["kind"], { tag: string; cls: string }> = {
   failure: { tag: "✗", cls: "text-ember" },
 };
 
-function ProtocolLog({ entries }: { entries: LogEntry[] }) {
+function ProtocolLog({ entries, version }: { entries: LogEntry[]; version: string }) {
   const end = useRef<HTMLDivElement>(null);
   useEffect(() => {
     end.current?.scrollIntoView({ block: "nearest" });
   }, [entries.length]);
-
-  const sum = (kind: LogEntry["kind"]) =>
-    entries.filter((e) => e.kind === kind).reduce((acc, e) => acc + (e.bytes ?? 0), 0);
-
   return (
-    <aside
-      aria-label="Protocol log"
-      className="panel flex max-h-[70vh] flex-col overflow-hidden lg:col-span-2 xl:sticky xl:top-24 xl:col-span-1 xl:max-h-[calc(100vh-8rem)] xl:self-start"
-    >
-      <div className="border-b border-glacier/10 p-4">
-        <p className="eyebrow">Protocol log</p>
-        <p className="mt-1 text-xs text-moss">Every line is a real message produced by frost-wasm.</p>
-        <dl className="mt-3 grid grid-cols-3 gap-2 font-mono text-[0.65rem]">
-          <div>
-            <dt className="text-moss-deep">messages</dt>
-            <dd className="text-bone">{entries.filter((e) => e.bytes).length}</dd>
-          </div>
-          <div>
-            <dt className="text-moss-deep">public</dt>
-            <dd className="text-glacier">{sum("broadcast") + sum("coordinator")} B</dd>
-          </div>
-          <div>
-            <dt className="text-moss-deep">secret</dt>
-            <dd className="text-brass">{sum("private")} B</dd>
-          </div>
-        </dl>
+    <aside aria-label="Protocol log" className="panel flex max-h-[60vh] w-[380px] max-w-full flex-col overflow-hidden">
+      <div className="border-b border-glacier/10 p-3">
+        <p className="eyebrow">Protocol log · real frost-wasm messages</p>
+        <p className="mt-1 font-mono text-[0.6rem] text-moss-deep">{version}</p>
       </div>
-      <div className="flex-1 space-y-1.5 overflow-y-auto p-4 font-mono text-[0.7rem] leading-relaxed" aria-live="polite">
+      <div className="flex-1 space-y-1 overflow-y-auto p-3 font-mono text-[0.68rem] leading-relaxed">
         {entries.length === 0 && <p className="text-moss-deep">› nothing yet</p>}
         {entries.map((e) => (
           <p key={e.id} className="break-words">

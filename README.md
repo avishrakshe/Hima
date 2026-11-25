@@ -18,12 +18,14 @@ But the people asked to *hold* the shares mostly don't know what a share is, wha
 
 ## What you play
 
-| Level | You do | You learn |
+Hima is built so **a child can follow it**. A guide character, Himu ❄️, tells a story about animal friends and a treasure chest, gives one instruction at a time, and hands out stars and badges. Every story beat is a real protocol step. Flip on **Grown-up mode** to see the technical name of each step and a live protocol log of the real messages.
+
+| Level | Story (kid view) | What really happens |
 |---|---|---|
-| **1 · Key Ceremony** | 3–5 players run distributed key generation (DKG): broadcast commitments, deal private shares, derive keys | One group key exists, and its private key is never computed anywhere |
-| **2 · Catch the Cheater** | One signer is secretly dealt the cheater role and signs a different message. Players vote on who they suspect, then aggregate | FROST v3 checks every signature share and **names** the culprit. With spare signers (n > t), the group retries without them |
-| **3 · Old Shares** | *Stretch goal, not yet built.* Refresh shares, then mix old and new | What a share refresh does and doesn't protect |
-| **4 · Unlinkable** | Sign the same message twice with re-randomized FROST, then try to link the signatures | Each signature verifies only under a one-time key (group key + α·G), never the group key |
+| **1 · The Magic Key** 🔑 | Friends make secret snowflakes, pass secret pieces in envelopes, and mix them into a key. Everyone's crystal picture matches, yet nobody holds the whole key | Distributed key generation (DKG): commitments, private shares, key shares. The crystal is drawn from the real group-key bytes |
+| **2 · Catch the Trickster** 🕵️ | One signer is secretly the trickster and signs a different letter. Guess who, then watch the magic checker test every puzzle piece and stamp them **BUSTED** | Threshold signing; FROST v3 verifies each signature share and **names** the culprit. With spare signers (n > t) the team retries and the chest opens |
+| **3 · Old Snowflakes** ❄️ | *Coming soon (stretch goal).* | Share refresh: what it does and doesn't protect |
+| **4 · Disguise Party** 🎭 | Every signed letter wears a new disguise. Then *you* play the spy and try to pick your team's disguises out of four | Re-randomized FROST: each signature verifies only under a one-time key (group key + α·G). The stranger's disguises come from a second, independent FROST group |
 
 The landing page also has a **"Run real FROST"** button that runs a full 5-player game in your browser in under a second.
 
